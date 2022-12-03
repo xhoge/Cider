@@ -43,6 +43,8 @@ namespace cider
         {
             cpu = new CPU();
             cpu.mem_write(0x10, 0x55);
+            
+            Debug.Assert(cpu.mem_read(0x10) == 0x55);
             cpu.mem_load_and_run(new byte[] { 0xa5, 0x10, 0x00 });
             Debug.Assert(cpu.register_a == 0x55);
         }
