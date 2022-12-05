@@ -18,6 +18,7 @@ namespace cider
         public byte key_code;
 
         public GamePad() {
+            key_code = 0x77;
         }
         public void GetKey(KeyEventArgs e,KeyState state)
         {

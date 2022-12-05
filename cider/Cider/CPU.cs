@@ -674,15 +674,15 @@ namespace cider
             UInt16 addr = get_operand_address(mode);
             byte value = mem_read(addr);
             byte c_flg = (byte)(get_status_flg(CpuStatus.CarryFlg) ^ 0x01);
-            UInt16 sum = (byte)(register_a - value - c_flg);
-            byte result = (byte)sum;
+            UInt16 diff = (UInt16)(register_a - value - c_flg);
+            byte result = (byte)diff;
 
-            if (sum > 0xff)
-                update_status_flg(CpuStatus.CarryFlg, 1);   
+            if (diff > 0xff)
+                update_status_flg(CpuStatus.CarryFlg, 0);   
             else
-                update_status_flg(CpuStatus.CarryFlg, 0);
+                update_status_flg(CpuStatus.CarryFlg, 1);
 
-            if (((value ^ result) & (register_a ^ result) & 0x80) != 0)
+            if (((~value ^ diff) & (register_a ^ diff) & 0x80) != 0)
                 update_status_flg(CpuStatus.OverFlowFlg, 1);
             else
                 update_status_flg(CpuStatus.OverFlowFlg, 0);
