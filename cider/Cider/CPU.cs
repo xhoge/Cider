@@ -43,6 +43,7 @@ namespace cider
         private byte status;
         private byte[] mem;
         private UInt16 pc;
+        private Bus bus;
         const UInt16 STACK_BASE = 0x100;
 
         private UInt16 get_operand_address(AddressingMode mode) {
@@ -105,6 +106,7 @@ namespace cider
             register_y = 0;
             status = 0;
             sp = 0xfd;
+            bus = new Bus();
         }
         public void reset() {
             register_a = 0;
@@ -116,22 +118,22 @@ namespace cider
         }
 
         public byte mem_read(UInt16 addr) {
-            return mem[addr];
+            return bus.mem_read(addr);
         }
         public void mem_write(UInt16 addr, byte data) {
-            mem[addr] = data;
+            bus.mem_write(addr, data);
         }
         public UInt16 mem_read_u16(UInt16 pos){
-            UInt16 lo = mem_read(pos);
-            UInt16 hi = mem_read((UInt16)(pos + 1));
+            UInt16 lo = bus.mem_read(pos);
+            UInt16 hi = bus.mem_read((UInt16)(pos + 1));
             return (UInt16)((hi << 8) | lo);
         }
         public void mem_write_u16(UInt16 addr,UInt16 data)
         {
             byte hi = (byte)(data >> 8);
             byte lo = (byte)(data & 0xff);
-            mem_write(addr,lo);
-            mem_write((UInt16)(addr + 1), hi);
+            bus.mem_write(addr,lo);
+            bus.mem_write((UInt16)(addr + 1), hi);
         }
         public void mem_load_and_run(byte[] program) {
             load(program);
