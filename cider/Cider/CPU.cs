@@ -59,18 +59,22 @@ namespace cider
                     _pos = mem_read(pc);
                     _addr = (UInt16)(_pos + register_x);
                     return _addr;
+
                 case AddressingMode.ZeroPage_Y:
                     _pos = mem_read(pc);
                     _addr = (UInt16)(_pos +register_y);
                     return _addr;
+
                 case AddressingMode.Absolute_X:
                     _base = mem_read_u16(pc);
                     _addr = (UInt16)(_base + register_x);
                     return _addr;
+
                 case AddressingMode.Absolute_Y:
                     _base = mem_read_u16(pc);
                     _addr = (UInt16)(_base + register_y);
                     return _addr;
+
                 case AddressingMode.Indirect_X:
                     _base = mem_read(pc);
                     byte _ptr = (byte)(_base + register_x);
@@ -89,6 +93,7 @@ namespace cider
 
                 case AddressingMode.NoneAddressing:
                     throw new Exception($"mode {mode} is not null");
+
                 default: throw new Exception();
             }
         }
@@ -150,13 +155,13 @@ namespace cider
         {
             
             byte code = mem_read(pc);
-            Debug.Write(" 命令:"+Convert.ToString(code,16).PadLeft(2,'0')+"  ");
-            Debug.WriteLine("status:" + Convert.ToString(status, 2).PadLeft(8, '0')
-                + "  pc:" + Convert.ToString(pc, 16)
-                + "  regi_a:" + register_a.ToString().PadLeft(3, '0')
-                + "  regi_x:" + register_x.ToString().PadLeft(3, '0')
-                + "  regi_y:" + register_y.ToString().PadLeft(3, '0')
-                + "  sp:" + Convert.ToString(sp, 16));
+            //Debug.Write(" 命令:"+Convert.ToString(code,16).PadLeft(2,'0')+"  ");
+            //Debug.WriteLine("status:" + Convert.ToString(status, 2).PadLeft(8, '0')
+            //    + "  pc:" + Convert.ToString(pc, 16)
+            //    + "  regi_a:" + register_a.ToString().PadLeft(3, '0')
+            //    + "  regi_x:" + register_x.ToString().PadLeft(3, '0')
+            //    + "  regi_y:" + register_y.ToString().PadLeft(3, '0')
+            //    + "  sp:" + Convert.ToString(sp, 16));d
             pc +=1;
             switch (code) {
             /* 転送命令 */
@@ -272,7 +277,7 @@ namespace cider
                 case 0x2C: bit(AddressingMode.Absolute); pc +=2; break;
 
                 //CMP 
-                case 0xC9: cmp(AddressingMode.Immediate,register_a) ; pc +=1; break;
+                case 0xC9: cmp(AddressingMode.Immediate,register_a)  ; pc +=1; break;
                 case 0xC5: cmp(AddressingMode.ZeroPage, register_a)  ; pc +=1; break;
                 case 0xD5: cmp(AddressingMode.ZeroPage_X, register_a); pc +=1; break;
                 case 0xCD: cmp(AddressingMode.Absolute, register_a)  ; pc +=2; break;
@@ -292,10 +297,10 @@ namespace cider
                 case 0xCC: cmp(AddressingMode.Absolute, register_y) ; pc +=2; break;
 
                 //DEC 
-                case 0xC6: dec(AddressingMode.Immediate); pc +=1; break;
-                case 0xD6: dec(AddressingMode.ZeroPage) ; pc +=1; break;
-                case 0xCE: dec(AddressingMode.Absolute) ; pc +=2; break;
-                case 0xDE: dec(AddressingMode.ZeroPage) ; pc +=2; break;
+                case 0xC6: dec(AddressingMode.ZeroPage)  ; pc +=1; break;
+                case 0xD6: dec(AddressingMode.ZeroPage_X); pc +=1; break;
+                case 0xCE: dec(AddressingMode.Absolute)  ; pc +=2; break;
+                case 0xDE: dec(AddressingMode.Absolute_X); pc +=2; break;
 
                 //DEX 
                 case 0xCA: update_zero_and_negative_flags(--register_x); break;
@@ -396,15 +401,15 @@ namespace cider
                 case 0x6C:
                     UInt16 addr =  mem_read_u16(pc);
                     UInt16 jump_addr = 0;
-                    if ((UInt16)(addr & 0x00ff) == 0x00ff)
+
+                    if ((addr & 0x00ff) == 0x00ff)
                     {
                         byte _lo = mem_read(addr);
                         byte _hi = mem_read((UInt16)(addr & 0xff00));
-                        jump_addr = (UInt16)((_hi << 8) | (UInt16)_lo);
+                        jump_addr = (UInt16)((_hi << 8) | _lo);
                     }
                     else
-                        jump_addr = mem_read_u16(addr);
-
+                        { jump_addr = mem_read_u16(addr); }
                     pc = jump_addr;
                     break;
 
@@ -443,6 +448,7 @@ namespace cider
 
                 //BPL
                 case 0x10: branch(get_status_flg(CpuStatus.NegativeFlg) == 0); break;
+
                 //BVC
                 case 0x50: branch(get_status_flg(CpuStatus.OverFlowFlg) == 0); break;
 
@@ -559,7 +565,7 @@ namespace cider
         {
             UInt16 addr = get_operand_address(mode);
             byte value = mem_read(addr);
-            UInt16 diff = (byte)(target - value);
+            UInt16 diff = (UInt16)(target - value);
             byte c_flg = (byte)(((diff & 0x100) >> 8)^0x01);
             update_status_flg(CpuStatus.CarryFlg, c_flg);
             update_zero_and_negative_flags((byte)diff);
@@ -738,12 +744,18 @@ namespace cider
         {
             switch(mode)
             {
-                case CpuStatus.CarryFlg: return (byte)(status & 0b0000_0001);
-                case CpuStatus.ZeroFlg:  return (byte)((status & 0b0000_0010)>>1);
-                case CpuStatus.IRQFlg:   return (byte)((status & 0b0000_0100)>>2);
-                case CpuStatus.BreakModeFlg: return (byte)((status & 0b0001_0000)>>4);
-                case CpuStatus.OverFlowFlg:  return (byte)((status & 0b0100_0000)>>6);
-                case CpuStatus.NegativeFlg:  return (byte)((status & 0b1000_0000)>>7);
+                case CpuStatus.CarryFlg: 
+                    return (byte)(status & 0b0000_0001);
+                case CpuStatus.ZeroFlg:  
+                    return (byte)((status & 0b0000_0010) >>1);
+                case CpuStatus.IRQFlg:   
+                    return (byte)((status & 0b0000_0100) >>2);
+                case CpuStatus.BreakModeFlg: 
+                    return (byte)((status & 0b0001_0000) >>4);
+                case CpuStatus.OverFlowFlg:  
+                    return (byte)((status & 0b0100_0000) >>6);
+                case CpuStatus.NegativeFlg:  
+                    return (byte)((status & 0b1000_0000) >>7);
             }
             return 0x00;
         }

@@ -17,17 +17,18 @@ namespace cider
 
         public byte key_code;
 
-        public GamePad() { }
+        public GamePad() {
+        }
         public void GetKey(KeyEventArgs e,KeyState state)
         {
             if(state ==KeyState.Down)
             {
-                switch (e.KeyData.ToString())
+                switch (e.KeyData)
                 {
-                    case "W": key_code = 0x77; break;
-                    case "A": key_code = 0x61; break;
-                    case "S": key_code = 0x73; break;
-                    case "D": key_code = 0x64; break;
+                    case Keys.W: key_code = 0x77; return;
+                    case Keys.A: key_code = 0x61; return;
+                    case Keys.S: key_code = 0x73; return;
+                    case Keys.D: key_code = 0x64; return;
                 }
             }
         }

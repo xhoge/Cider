@@ -2,7 +2,9 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.Contracts;
+using System.Drawing.Imaging;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Windows.Forms;
@@ -51,11 +53,14 @@ namespace cider
             cpu.load(rom);
             cpu.reset();
 
-            Bitmap img = new Bitmap(32, 32);
-
-            int width_pos = 0, hight_pos = 0;
-            bool progress=true;
+            Int32[] Bits = new int[32 * 32];
+            GCHandle bitsHandle = GCHandle.Alloc(Bits, GCHandleType.Pinned);
+            Bitmap img = new Bitmap(32, 32, 32*4 , PixelFormat.Format32bppRgb, bitsHandle.AddrOfPinnedObject());
+            window.monitor.Image = img;
+            bool progress =true;
             Random r1 = new Random();
+            
+
             Task myTask = Task.Run(() =>
             {
                 while(progress)
@@ -64,39 +69,30 @@ namespace cider
                     cpu.mem_write(0xff, gamepad.key_code);
                     progress = cpu.exec();
                     
-                    (width_pos, hight_pos) = (0, 0);
                     foreach (UInt16 i in Enumerable.Range(0x200, 0x400))
                     {
-                        Color c = color(cpu.mem_read(i));
-                        img.SetPixel(width_pos, hight_pos, c);
-
-                        if (width_pos > 30)
-                        {
-                            width_pos = 0;
-                            hight_pos += 1;
-                        }
-                        else
-                        {
-                            width_pos += 1;
+                        Int32 c = color(cpu.mem_read(i));
+                        if (Bits[i - 0x200] != c) {
+                            Bits[i - 0x200] = c;
                         }
                     }
-                    window.monitor.Image = new Bitmap(img, 320, 320);
-                    Thread.Sleep(10);
+                    Task.Delay(4000);
+                    window.monitor.Invalidate();
                 }
             });
         }
-        private Color color(byte value)
+        private Int32 color(byte value)
         {
             switch (value) {
-                case 0: return Color.Black;
-                case 1: return Color.White;
-                case 2: case 9: return Color.Gray;
-                case 3: case 10: return Color.Red;
-                case 4: case 11: return Color.Green;
-                case 5: case 12: return Color.Blue;
-                case 6: case 13: return Color.Magenta;
-                case 7: case 14: return Color.Yellow;
-                default: return Color.Cyan;
+                case 0: return ColorTranslator.ToWin32(Color.Black);
+                case 1: return ColorTranslator.ToWin32(Color.White);
+                case 2: case 9: return ColorTranslator.ToWin32(Color.Gray);
+                case 3: case 10: return ColorTranslator.ToWin32(Color.Red);
+                case 4: case 11: return ColorTranslator.ToWin32(Color.Green);
+                case 5: case 12: return ColorTranslator.ToWin32(Color.Blue);
+                case 6: case 13: return ColorTranslator.ToWin32(Color.Magenta);
+                case 7: case 14: return ColorTranslator.ToWin32(Color.Yellow);
+                default: return ColorTranslator.ToWin32(Color.Cyan);
             }
         }
         public void cpu_test3()
