@@ -21,6 +21,7 @@ namespace cider
 
         private CPU cpu;
         public GamePad gamepad;
+        public Cartridge cartridge;
 
         public void Run(string rompath)
         {
@@ -52,6 +53,8 @@ namespace cider
             gamepad = new GamePad();
             cpu.load(rom);
             cpu.reset();
+            cartridge = new Cartridge();
+            cartridge.LoadRom(rom);
 
             Int32[] Bits = new int[32 * 32];
             GCHandle bitsHandle = GCHandle.Alloc(Bits, GCHandleType.Pinned);
