@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.Contracts;
+using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -23,6 +25,7 @@ namespace cider
         private Bus bus;
         public GamePad gamepad;
         public Cartridge cartridge;
+        public Bitmap img;
 
         public void Run(string rompath)
         {
@@ -40,8 +43,8 @@ namespace cider
 
             Int32[] Bits = new int[32 * 32];
             GCHandle bitsHandle = GCHandle.Alloc(Bits, GCHandleType.Pinned);
-            Bitmap img = new Bitmap(32, 32, 32*4 , PixelFormat.Format32bppRgb, bitsHandle.AddrOfPinnedObject());
-            window.monitor.Image = img;
+            img = new Bitmap(32, 32, 32*4 , PixelFormat.Format32bppRgb, bitsHandle.AddrOfPinnedObject());
+
             bool progress =true;
             Random r1 = new Random();
             
@@ -57,15 +60,20 @@ namespace cider
                     foreach (UInt16 i in Enumerable.Range(0x200, 0x400))
                     {
                         Int32 c = color(cpu.mem_read(i));
-                        if (Bits[i - 0x200] != c) {
-                            Bits[i - 0x200] = c;
-                        }
+                        if (Bits[i - 0x200] != c) Bits[i - 0x200] = c;
                     }
 
                     Thread.Sleep(1/10);
-                    window.monitor.Invalidate();
+                    window.Invalidate();
                 }
             });
+        }
+        public void Drawing(PaintEventArgs e)
+        {
+            if(img == null) return;
+            e.Graphics.PixelOffsetMode = PixelOffsetMode.Half;
+            e.Graphics.InterpolationMode = InterpolationMode.NearestNeighbor;
+            e.Graphics.DrawImage(img, 0, 0, window.Width, window.Height);
         }
         private Int32 color(byte value)
         {

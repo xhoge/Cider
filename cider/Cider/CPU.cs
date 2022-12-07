@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Drawing.Drawing2D;
 using System.Linq;
 using System.Reflection.Emit;
+using System.Runtime.Intrinsics.X86;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
@@ -480,6 +482,163 @@ namespace cider
                 //SEI
                 case 0x78: update_status_flg(CpuStatus.IRQFlg, 1); break;
 
+
+                /* 非公式命令 */
+                //AAC
+                case 0x0B: aac(AddressingMode.Immediate); pc += 1; break;
+                case 0x2B: aac(AddressingMode.Immediate); pc += 1; break;
+
+                //AAX
+                case 0x87: aax(AddressingMode.ZeroPage); pc += 1; break;
+                case 0x97: aax(AddressingMode.ZeroPage_Y); pc += 1; break;
+                case 0x83: aax(AddressingMode.Indirect_X); pc += 1; break;
+                case 0x8F: aax(AddressingMode.Absolute); pc += 2; break;
+
+                //ARR
+                case 0x6B: arr(AddressingMode.Immediate); pc += 1; break;
+
+                //ASR[ALR]
+                case 0x4B: asr(AddressingMode.Immediate); pc += 1; break;
+
+                //ATX[OAL]
+                case 0xAB: atx(AddressingMode.Immediate); pc += 1; break;
+
+                //AXA [AXA] 
+                case 0x9F: axa(AddressingMode.Absolute_Y); pc += 2; break;
+                case 0x93: axa(AddressingMode.Indirect_Y); pc += 1; break;
+
+                //AXS[SAX] 
+                case 0xCB: axs(AddressingMode.Immediate); pc += 1; break;
+
+                //DCP[DCM]
+                case 0xC7: dcp(AddressingMode.ZeroPage); pc += 1; break;
+                case 0xD7: dcp(AddressingMode.ZeroPage_X); pc += 1; break;
+                case 0xCF: dcp(AddressingMode.Absolute); pc += 2; break;
+                case 0xDF: dcp(AddressingMode.Absolute_X); pc += 2; break;
+                case 0xDB: dcp(AddressingMode.Absolute_Y); pc += 2; break;
+                case 0xC3: dcp(AddressingMode.Indirect_X); pc += 1; break;
+                case 0xD3: dcp(AddressingMode.Indirect_Y); pc += 1; break;
+
+                //DOP
+                case 0x04: dop(AddressingMode.ZeroPage); pc += 1; break;
+                case 0x14: dop(AddressingMode.ZeroPage_X); pc += 1; break;
+                case 0x34: dop(AddressingMode.ZeroPage_X); pc += 1; break;
+                case 0x44: dop(AddressingMode.ZeroPage); pc += 1; break;
+                case 0x54: dop(AddressingMode.ZeroPage_X); pc += 1; break;
+                case 0x64: dop(AddressingMode.ZeroPage); pc += 1; break;
+                case 0x74: dop(AddressingMode.ZeroPage_X); pc += 1; break;
+                case 0x80: dop(AddressingMode.Immediate); pc += 1; break;
+                case 0x82: dop(AddressingMode.Immediate); pc += 1; break;
+                case 0x89: dop(AddressingMode.Immediate); pc += 1; break;
+                case 0xC2: dop(AddressingMode.Immediate); pc += 1; break;
+                case 0xD4: dop(AddressingMode.ZeroPage_X); pc += 1; break;
+                case 0xE2: dop(AddressingMode.Immediate); pc += 1; break;
+                case 0xF4: dop(AddressingMode.ZeroPage_X); pc += 1; break;
+
+                //ISC
+                case 0xE7: isc(AddressingMode.ZeroPage); pc += 1; break;
+                case 0xF7: isc(AddressingMode.ZeroPage_X); pc += 1; break;
+                case 0xEF: isc(AddressingMode.Absolute); pc += 2; break;
+                case 0xFF: isc(AddressingMode.Absolute_X); pc += 2; break;
+                case 0xFB: isc(AddressingMode.Absolute_Y); pc += 2; break;
+                case 0xE3: isc(AddressingMode.Indirect_X); pc += 1; break;
+                case 0xF3: isc(AddressingMode.Indirect_Y); pc += 1; break;
+
+                //KIL(JAM)
+                case 0x02: break;
+                case 0x12: break;
+                case 0x22: break;
+                case 0x32: break;
+                case 0x42: break;
+                case 0x52: break;
+                case 0x62: break;
+                case 0x72: break;
+                case 0x92: break;
+                case 0xB2: break;
+                case 0xD2: break;
+                case 0xF2: break;
+
+                //LAR
+                case 0xBB: lar(AddressingMode.Absolute_Y); pc += 2; break;
+
+                //LAX
+                case 0xA7: lax(AddressingMode.ZeroPage); pc += 1; break;
+                case 0xB7: lax(AddressingMode.ZeroPage_Y); pc += 1; break;
+                case 0xAF: lax(AddressingMode.Absolute); pc += 2; break;
+                case 0xBF: lax(AddressingMode.Absolute_Y); pc += 2; break;
+                case 0xA3: lax(AddressingMode.Indirect_X); pc += 1; break;
+                case 0xB3: lax(AddressingMode.Indirect_Y); pc += 1; break;
+
+                //NOP
+                case 0x1A: break;
+                case 0x3A: break;
+                case 0x5A: break;
+                case 0x7A: break;
+                case 0xDA: break;
+                case 0xFA: break;
+
+                //RLA
+                case 0x27: rla(AddressingMode.ZeroPage); pc += 1; break;
+                case 0x37: rla(AddressingMode.ZeroPage_X); pc += 1; break;
+                case 0x2F: rla(AddressingMode.Absolute); pc += 2; break;
+                case 0x3F: rla(AddressingMode.Absolute_X); pc += 2; break;
+                case 0x3B: rla(AddressingMode.Absolute_Y); pc += 2; break;
+                case 0x23: rla(AddressingMode.Indirect_X); pc += 1; break;
+                case 0x33: rla(AddressingMode.Indirect_Y); pc += 1; break;
+
+                //RRA
+                case 0x67: rra(AddressingMode.ZeroPage); pc += 1; break;
+                case 0x77: rra(AddressingMode.ZeroPage_X); pc += 1; break;
+                case 0x6F: rra(AddressingMode.Absolute); pc += 2; break;
+                case 0x7F: rra(AddressingMode.Absolute_X); pc += 2; break;
+                case 0x7B: rra(AddressingMode.Absolute_Y); pc += 2; break;
+                case 0x63: rra(AddressingMode.Indirect_X); pc += 1; break;
+                case 0x73: rra(AddressingMode.Indirect_Y); pc += 1; break;
+
+                //SBC
+                case 0xEB: sbc(AddressingMode.Immediate); pc += 1; break;
+
+
+                //SLO
+                case 0x07: slo(AddressingMode.ZeroPage); pc += 1; break;
+                case 0x17: slo(AddressingMode.ZeroPage_X); pc += 1; break;
+                case 0x0F: slo(AddressingMode.Absolute); pc += 2; break;
+                case 0x1F: slo(AddressingMode.Absolute_X); pc += 2; break;
+                case 0x1B: slo(AddressingMode.Absolute_Y); pc += 2; break;
+                case 0x03: slo(AddressingMode.Indirect_X); pc += 1; break;
+                case 0x13: slo(AddressingMode.Indirect_Y); pc += 1; break;
+
+                //SRE
+                case 0x47: sre(AddressingMode.ZeroPage); pc += 1; break;
+                case 0x57: sre(AddressingMode.ZeroPage_X); pc += 1; break;
+                case 0x4F: sre(AddressingMode.Absolute); pc += 2; break;
+                case 0x5F: sre(AddressingMode.Absolute_X); pc += 2; break;
+                case 0x5B: sre(AddressingMode.Absolute_Y); pc += 2; break;
+                case 0x43: sre(AddressingMode.Indirect_X); pc += 1; break;
+                case 0x53: sre(AddressingMode.Indirect_Y); pc += 1; break;
+
+
+                //SXA
+                case 0x9E: sxa(AddressingMode.Absolute_Y); pc += 2; break;
+
+                //SYA(SHY)
+                case 0x9C: sya(AddressingMode.Absolute_X); pc += 2; break;
+
+                //TOP(NOP)
+                case 0x0C: top(AddressingMode.Absolute); pc += 2; break;
+                case 0x1C: top(AddressingMode.Absolute_X); pc += 2; break;
+                case 0x3C: top(AddressingMode.Absolute_X); pc += 2; break;
+                case 0x5C: top(AddressingMode.Absolute_X); pc += 2; break;
+                case 0x7C: top(AddressingMode.Absolute_X); pc += 2; break;
+                case 0xDC: top(AddressingMode.Absolute_X); pc += 2; break;
+                case 0xFC: top(AddressingMode.Absolute_X); pc += 2; break;
+
+                //XAA(ANE)
+                case 0x8B: xaa(AddressingMode.Immediate); pc += 1; break;
+
+                //XAS
+                case 0x9B: xas(AddressingMode.Absolute_Y); pc += 2; break;
+                
                 /* その他 */
                 //NOP 
                 case 0xEA: break;
@@ -574,13 +733,14 @@ namespace cider
             update_zero_and_negative_flags((byte)diff);
         }
 
-        private void dec(AddressingMode mode)
+        private byte dec(AddressingMode mode)
         {
             UInt16 addr = get_operand_address(mode);
             byte value = mem_read(addr);
             value -= 1;
             mem_write(addr, value);
             update_zero_and_negative_flags(value);
+            return value;
         }
 
         private void eor(AddressingMode mode)
@@ -591,13 +751,14 @@ namespace cider
             update_zero_and_negative_flags(register_a);
         }
 
-        private void inc(AddressingMode mode)
+        private byte inc(AddressingMode mode)
         {
             UInt16 addr = get_operand_address(mode);
             byte value = mem_read(addr);
             value +=1;
             mem_write(addr, value);
             update_zero_and_negative_flags(value);
+            return value;
         }
         private void lsr_Accumulator()
         {
@@ -693,6 +854,117 @@ namespace cider
             register_a = result;
             update_zero_and_negative_flags(register_a);
         }
+
+        private void aac(AddressingMode mode)
+        {
+            UInt16 addr = get_operand_address(mode);
+            byte value = mem_read(addr);
+            register_a &= value;
+            update_status_flg(CpuStatus.CarryFlg, (byte)(register_a >> 7));
+            update_zero_and_negative_flags(register_a);
+        }
+        private void aax(AddressingMode mode)
+        {
+            UInt16 addr = get_operand_address(mode);
+            register_a &= register_x;
+            mem_write(addr, register_a);
+            update_zero_and_negative_flags(register_a);
+        }
+        private void arr(AddressingMode mode)
+        {
+            UInt16 addr = get_operand_address(mode);
+            byte value = mem_read(addr);
+            register_a &= value;
+            ror_Accumulator();
+            switch (register_a)
+            {
+                case byte i when (i & 0b0100_0000)!=0 && (i & 0b0010_0000) != 0 :
+                    update_status_flg(CpuStatus.CarryFlg, 1);
+                    update_status_flg(CpuStatus.OverFlowFlg, 0);
+                    break;
+                case byte i when (i & 0b0010_0000) != 0: // 5bit
+                    update_status_flg(CpuStatus.CarryFlg, 0);
+                    update_status_flg(CpuStatus.OverFlowFlg, 1);
+                    break;
+                case byte i when (i & 0b0100_0000) != 0://6bit
+                    update_status_flg(CpuStatus.CarryFlg, 1);
+                    update_status_flg(CpuStatus.OverFlowFlg, 0);
+                    break;
+                default:
+                    update_status_flg(CpuStatus.CarryFlg, 0);
+                    update_status_flg(CpuStatus.OverFlowFlg, 0);
+                    break;
+            }
+            update_zero_and_negative_flags(register_a);
+        }
+        private void asr(AddressingMode mode)
+        {
+            UInt16 addr = get_operand_address(mode);
+            byte value = mem_read(addr);
+            register_a &= value;
+            lsr_Accumulator();
+        }
+        private void atx(AddressingMode mode)
+        {
+            UInt16 addr = get_operand_address(mode);
+            byte value = mem_read(addr);
+            register_a &= value;
+            register_x = register_a;
+            update_zero_and_negative_flags(register_x);
+        }
+        private void axa(AddressingMode mode)
+        {
+            UInt16 addr = get_operand_address(mode);
+            register_a &= register_x;
+            mem_write(addr, (byte)(register_a+7));
+        }
+        private void axs(AddressingMode mode)
+        {
+            UInt16 addr = get_operand_address(mode);
+            byte value = mem_read(addr);
+            byte result = (byte)(register_x & register_a);
+            
+            if(result <= value)
+            {
+                update_status_flg(CpuStatus.CarryFlg, 1);
+            }
+            result -= value;
+            register_x = result;
+            update_zero_and_negative_flags(register_x);
+        }
+
+        private void dcp(AddressingMode mode) 
+        {
+            UInt16 addr = get_operand_address(mode);
+            byte value = mem_read(addr);
+            byte result = (byte)(value - 1);
+            if(result > value) update_status_flg(CpuStatus.CarryFlg, 1);
+            mem_write(addr, value);
+        }
+        private void dop(AddressingMode mode)
+        {
+            UInt16 addr = get_operand_address(mode);
+            byte value = mem_read(addr);
+        }
+        private void isc(AddressingMode mode)
+        {
+            UInt16 addr = get_operand_address(mode);
+            byte value = mem_read(addr);
+
+        }
+        private void rla(AddressingMode mode) { }
+        private void rra(AddressingMode mode) { }
+        private void slo(AddressingMode mode) { }
+        private void lar(AddressingMode mode) { }
+        private void lax(AddressingMode mode) { }
+
+        private void sre(AddressingMode mode) { }
+        private void sxa(AddressingMode mode) { }
+        private void sya(AddressingMode mode) { }
+        private void top(AddressingMode mode) { }
+        private void xaa(AddressingMode mode) { }
+        private void xas(AddressingMode mode) { }
+
 
         private void stack_push(byte value)
         {
