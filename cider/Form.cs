@@ -28,7 +28,13 @@ namespace cider
         }
         public void Form_Shown(object sender, EventArgs e)
         {
-            cider.Run("hoge");
+            OpenFileDialog open = new OpenFileDialog();
+            open.Filter = "NES|*.nes";
+            if (open.ShowDialog() == DialogResult.OK)
+            {
+                cider.Run(open.FileName);
+            }
+            
         }
         private void Key_Down(object sender, KeyEventArgs e)
         {

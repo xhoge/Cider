@@ -41,7 +41,6 @@ namespace cider
         public byte register_y;
         public byte sp;
         private byte status;
-        private byte[] mem;
         private UInt16 pc;
         private Bus bus;
         const UInt16 STACK_BASE = 0x100;
@@ -99,14 +98,13 @@ namespace cider
             }
         }
         
-        public CPU() {
-            mem = new byte[0xffff];
+        public CPU(Bus _bus) {
             register_a = 0;
             register_x = 0;
             register_y = 0;
             status = 0;
             sp = 0xfd;
-            bus = new Bus();
+            bus = _bus;
         }
         public void reset() {
             register_a = 0;
@@ -135,15 +133,15 @@ namespace cider
             bus.mem_write(addr,lo);
             bus.mem_write((UInt16)(addr + 1), hi);
         }
-        public void mem_load_and_run(byte[] program) {
-            load(program);
-            reset();
-            run();
-        }
-        public void load(byte[] program) {
-            Array.Copy(program, 0,mem, 0x600, program.Length);
-            mem_write_u16(0xFFFC, 0x600);
-        }
+        //public void mem_load_and_run(byte[] program) {
+        //    load(program);
+        //    reset();
+        //    run();
+        //}
+        //public void load(byte[] program) {
+        //    Array.Copy(program, 0,mem, 0x600, program.Length);
+        //    mem_write_u16(0xFFFC, 0x600);
+        //}
 
         public void run()
         {
@@ -157,6 +155,8 @@ namespace cider
         {
             
             byte code = mem_read(pc);
+
+            /*ログ出力で動作がくそ重くなる*/
             //Debug.Write(" 命令:"+Convert.ToString(code,16).PadLeft(2,'0')+"  ");
             //Debug.WriteLine("status:" + Convert.ToString(status, 2).PadLeft(8, '0')
             //    + "  pc:" + Convert.ToString(pc, 16)
@@ -164,7 +164,8 @@ namespace cider
             //    + "  regi_x:" + register_x.ToString().PadLeft(3, '0')
             //    + "  regi_y:" + register_y.ToString().PadLeft(3, '0')
             //    + "  sp:" + Convert.ToString(sp, 16));d
-            pc +=1;
+
+            pc += 1;
             switch (code) {
             /* 転送命令 */
                 //LDA 

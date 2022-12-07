@@ -20,14 +20,15 @@ namespace cider
         public byte mapper;
         public Mirroring screen_mirroring;
 
-        const UInt16 PRG_ROM_PAGE_SIZE = 16000;
-        const UInt16 CHR_ROM_PAGE_SIZE = 8000;
+        const UInt16 PRG_ROM_PAGE_SIZE = 16384;
+        const UInt16 CHR_ROM_PAGE_SIZE = 8192;
 
         public bool LoadRom(byte[] raw)
         {
             byte[] NES_TAG = { 0x4E, 0x45, 0x53, 0x1A };
 
-            if (raw[0..4] != NES_TAG) {
+            if (NES_TAG.SequenceEqual(raw[0..3]))
+            {
                 return false; //File is not in INes file format
             }
             byte _mapper = (byte)((raw[7] & 0b1111_0000) | (raw[6] >> 4));
