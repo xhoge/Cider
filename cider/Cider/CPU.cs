@@ -135,15 +135,6 @@ namespace cider
             bus.mem_write(addr,lo);
             bus.mem_write((UInt16)(addr + 1), hi);
         }
-        //public void mem_load_and_run(byte[] program) {
-        //    load(program);
-        //    reset();
-        //    run();
-        //}
-        //public void load(byte[] program) {
-        //    Array.Copy(program, 0,mem, 0x600, program.Length);
-        //    mem_write_u16(0xFFFC, 0x600);
-        //}
 
         public void run()
         {
@@ -473,7 +464,7 @@ namespace cider
                 case 0x78: update_status_flg(CpuStatus.IRQFlg, 1); break;
 
 
-                /* 非公式命令 */
+            /* 非公式命令 */
                 //AAC
                 case 0x0B: aac(AddressingMode.Immediate); pc += 1; break;
                 case 0x2B: aac(AddressingMode.Immediate); pc += 1; break;
@@ -616,7 +607,7 @@ namespace cider
                 //XAS
                 case 0x9B: xas(AddressingMode.Absolute_Y); pc += 2; break;
                 
-                /* その他 */
+            /* その他 */
                 //NOP 
                 case 0xEA: break;
 
@@ -930,6 +921,27 @@ namespace cider
         }
         private void isc(AddressingMode mode)
         {
+            byte data = inc(mode);
+            byte c_flg = (byte)(get_status_flg(CpuStatus.CarryFlg) ^ 0x01);
+            UInt16 diff = (UInt16)(register_a - data - c_flg);
+            byte result = (byte)diff;
+
+            if (diff > 0xff)
+                update_status_flg(CpuStatus.CarryFlg, 0);
+            else
+                update_status_flg(CpuStatus.CarryFlg, 1);
+
+            if (((~data ^ diff) & (register_a ^ diff) & 0x80) != 0)
+                update_status_flg(CpuStatus.OverFlowFlg, 1);
+            else
+                update_status_flg(CpuStatus.OverFlowFlg, 0);
+
+            register_a = result;
+            update_zero_and_negative_flags(register_a);
+
+        }
+        private void lar(AddressingMode mode)
+        {
             UInt16 addr = get_operand_address(mode);
             byte value = mem_read(addr);
             byte result = (byte)(sp & value);
@@ -937,11 +949,6 @@ namespace cider
             register_x = result;
             sp = result;
             update_zero_and_negative_flags(result);
-        }
-        private void lar(AddressingMode mode)
-        {
-            UInt16 addr = get_operand_address(mode);
-            byte value = mem_read(addr);
 
         }
         private void lax(AddressingMode mode)
@@ -960,13 +967,27 @@ namespace cider
         }
         private void rra(AddressingMode mode) {
             byte data = rol(mode);
-            register_a |= data;
+            byte c_flg = get_status_flg(CpuStatus.CarryFlg);
+            UInt16 sum = (UInt16)(register_a + data + c_flg);
+            byte result = (byte)sum;
+
+            if (sum > 0xff)
+            { update_status_flg(CpuStatus.CarryFlg, 1); }
+            else
+            { update_status_flg(CpuStatus.CarryFlg, 0); }
+
+            if (((data ^ result) & (register_a ^ result) & 0x80) != 0)
+            { update_status_flg(CpuStatus.OverFlowFlg, 1); }
+            else
+            { update_status_flg(CpuStatus.OverFlowFlg, 0); }
+
+            register_a = result;
             update_zero_and_negative_flags(register_a);
 
         }
         private void slo(AddressingMode mode) {
             byte data = asl(mode);
-            register_a += data;
+            register_a |= data;
             update_zero_and_negative_flags(register_a);
         }
         
