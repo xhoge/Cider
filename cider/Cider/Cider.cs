@@ -49,7 +49,7 @@ namespace cider
             Random r1 = new Random();
             
 
-            Task myTask = Task.Run(() =>
+            Task myTask =  Task.Run(async () =>
             {
                 while(progress)
                 {
@@ -62,9 +62,8 @@ namespace cider
                         Int32 c = color(cpu.mem_read(i));
                         if (Bits[i - 0x200] != c) Bits[i - 0x200] = c;
                     }
-
-                    Thread.Sleep(1/10);
                     window.Invalidate();
+                    await Task.Delay(TimeSpan.FromMicroseconds(70));
                 }
             });
         }
@@ -73,7 +72,7 @@ namespace cider
             if(img == null) return;
             e.Graphics.PixelOffsetMode = PixelOffsetMode.Half;
             e.Graphics.InterpolationMode = InterpolationMode.NearestNeighbor;
-            e.Graphics.DrawImage(img, 0, 0, window.Width, window.Height);
+            e.Graphics.DrawImage(img, 0, 0, 320, 320);
         }
         private Int32 color(byte value)
         {

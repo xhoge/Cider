@@ -157,16 +157,6 @@ namespace cider
         {
             
             byte code = mem_read(pc);
-
-            /*ログ出力で動作がくそ重くなる*/
-            //Debug.Write(" 命令:"+Convert.ToString(code,16).PadLeft(2,'0')+"  ");
-            //Debug.WriteLine("status:" + Convert.ToString(status, 2).PadLeft(8, '0')
-            //    + "  pc:" + Convert.ToString(pc, 16)
-            //    + "  regi_a:" + register_a.ToString().PadLeft(3, '0')
-            //    + "  regi_x:" + register_x.ToString().PadLeft(3, '0')
-            //    + "  regi_y:" + register_y.ToString().PadLeft(3, '0')
-            //    + "  sp:" + Convert.ToString(sp, 16));d
-
             pc += 1;
             switch (code) {
             /* 転送命令 */
@@ -545,18 +535,10 @@ namespace cider
                 case 0xF3: isc(AddressingMode.Indirect_Y); pc += 1; break;
 
                 //KIL(JAM)
-                case 0x02: break;
-                case 0x12: break;
-                case 0x22: break;
-                case 0x32: break;
-                case 0x42: break;
-                case 0x52: break;
-                case 0x62: break;
-                case 0x72: break;
-                case 0x92: break;
-                case 0xB2: break;
-                case 0xD2: break;
-                case 0xF2: break;
+                case 0x02:case 0x12:case 0x22:case 0x32: case 0x42:case 0x52:
+                case 0x62:case 0x72:case 0x92:case 0xB2: case 0xD2:case 0xF2:
+                break;
+
 
                 //LAR
                 case 0xBB: lar(AddressingMode.Absolute_Y); pc += 2; break;
@@ -570,12 +552,7 @@ namespace cider
                 case 0xB3: lax(AddressingMode.Indirect_Y); pc += 1; break;
 
                 //NOP
-                case 0x1A: break;
-                case 0x3A: break;
-                case 0x5A: break;
-                case 0x7A: break;
-                case 0xDA: break;
-                case 0xFA: break;
+                case 0x1A:case 0x3A:case 0x5A:case 0x7A:case 0xDA:case 0xFA: break;
 
                 //RLA
                 case 0x27: rla(AddressingMode.ZeroPage); pc += 1; break;
@@ -619,10 +596,10 @@ namespace cider
 
 
                 //SXA
-                case 0x9E: sxa(AddressingMode.Absolute_Y); pc += 2; break;
+                case 0x9E: sxa();pc += 2; break;
 
                 //SYA(SHY)
-                case 0x9C: sya(AddressingMode.Absolute_X); pc += 2; break;
+                case 0x9C: sya(); pc += 2; break;
 
                 //TOP(NOP)
                 case 0x0C: top(AddressingMode.Absolute); pc += 2; break;
@@ -699,7 +676,7 @@ namespace cider
             register_a = (byte)(register_a << 1);
             update_zero_and_negative_flags(register_a);
         }
-        private void asl(AddressingMode mode)
+        private byte asl(AddressingMode mode)
         {
             UInt16 addr = get_operand_address(mode);
             byte value = mem_read(addr);
@@ -707,6 +684,7 @@ namespace cider
             value <<= 1;
             mem_write(addr, value);
             update_zero_and_negative_flags(value);
+            return value;
         }
 
         private void bit(AddressingMode mode)
@@ -766,7 +744,7 @@ namespace cider
             register_a >>= 1;
             update_zero_and_negative_flags(register_a);
         }
-        private void lsr(AddressingMode mode)
+        private byte lsr(AddressingMode mode)
         {
             UInt16 addr = get_operand_address(mode);
             byte value = mem_read(addr);
@@ -774,6 +752,7 @@ namespace cider
             value >>= 1;
             mem_write(addr, value);
             update_zero_and_negative_flags(value);
+            return value;
         }
 
         private void ora(AddressingMode mode)
@@ -794,7 +773,7 @@ namespace cider
             }
             update_zero_and_negative_flags(register_a);
         }
-        private void rol(AddressingMode mode)
+        private byte rol(AddressingMode mode)
         {
             UInt16 addr = get_operand_address(mode);
             byte value = mem_read(addr);
@@ -807,6 +786,7 @@ namespace cider
             }
             mem_write(addr, value);
             update_status_flg(CpuStatus.NegativeFlg, (byte)(value >> 7));
+            return value;
         }
         private void ror_Accumulator()
         {
@@ -819,7 +799,7 @@ namespace cider
             }
             update_zero_and_negative_flags(register_a);
         }
-        private void ror(AddressingMode mode)
+        private byte ror(AddressingMode mode)
         {
             UInt16 addr = get_operand_address(mode);
             byte value = mem_read(addr);
@@ -832,6 +812,7 @@ namespace cider
             }
             mem_write(addr, value);
             update_status_flg(CpuStatus.NegativeFlg, (byte)(value >> 7));
+            return value;
         }
         private void sbc(AddressingMode mode)
         {
@@ -945,25 +926,88 @@ namespace cider
         {
             UInt16 addr = get_operand_address(mode);
             byte value = mem_read(addr);
+            //何もしない
         }
         private void isc(AddressingMode mode)
         {
             UInt16 addr = get_operand_address(mode);
             byte value = mem_read(addr);
+            byte result = (byte)(sp & value);
+            register_a = result;
+            register_x = result;
+            sp = result;
+            update_zero_and_negative_flags(result);
+        }
+        private void lar(AddressingMode mode)
+        {
+            UInt16 addr = get_operand_address(mode);
+            byte value = mem_read(addr);
 
         }
-        private void rla(AddressingMode mode) { }
-        private void rra(AddressingMode mode) { }
-        private void slo(AddressingMode mode) { }
-        private void lar(AddressingMode mode) { }
-        private void lax(AddressingMode mode) { }
+        private void lax(AddressingMode mode)
+        {
+            UInt16 addr = get_operand_address(mode);
+            byte value = mem_read(addr);
+            register_a = value;
+            register_x = value;
+            update_zero_and_negative_flags(value);
 
-        private void sre(AddressingMode mode) { }
-        private void sxa(AddressingMode mode) { }
-        private void sya(AddressingMode mode) { }
-        private void top(AddressingMode mode) { }
-        private void xaa(AddressingMode mode) { }
-        private void xas(AddressingMode mode) { }
+        }
+        private void rla(AddressingMode mode) {
+            byte data = rol(mode);
+            register_a &= data;
+            update_zero_and_negative_flags(register_a);
+        }
+        private void rra(AddressingMode mode) {
+            byte data = rol(mode);
+            register_a |= data;
+            update_zero_and_negative_flags(register_a);
+
+        }
+        private void slo(AddressingMode mode) {
+            byte data = asl(mode);
+            register_a += data;
+            update_zero_and_negative_flags(register_a);
+        }
+        
+
+        private void sre(AddressingMode mode) {
+            byte data = lsr(mode);
+            register_a |= data;
+            update_zero_and_negative_flags(register_a);
+        }
+        private void sxa() {
+            UInt16 addr = (UInt16)(mem_read_u16(pc) + register_x);
+            byte data = (byte)(register_x & ((addr >> 8) + 1));
+            mem_write(addr, data);
+        }
+        private void sya() {
+            UInt16 addr = (UInt16)(mem_read_u16(pc) + register_y);
+            byte data = (byte)(register_x & ((addr >> 8) + 1));
+            mem_write(addr, data);
+        }
+        private void top(AddressingMode mode) {
+            UInt16 addr = get_operand_address(mode);
+            byte value = mem_read(addr);
+            //何もしない
+        }
+        private void xaa(AddressingMode mode) {
+            register_a = register_x;
+            update_zero_and_negative_flags(register_a);
+
+            UInt16 addr = get_operand_address(mode);
+            byte value = mem_read(addr);
+            register_a &= value;
+            update_zero_and_negative_flags(register_a);
+        }
+        private void xas(AddressingMode mode) {
+            byte data = (byte)(register_a & register_x);
+            sp = data;
+            UInt16 addr = (UInt16)(mem_read_u16(pc) + register_y);
+
+            data = (byte)(((addr >> 8) + 1 ) & sp);
+            mem_write(addr, data);
+        }
 
 
         private void stack_push(byte value)
